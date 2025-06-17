@@ -61,7 +61,17 @@ mapping = {
     "merchant_18fda02f-2e10-48f5-bea6-d0deceee9cd5":
     "snd_IJSGHOHIuciVLRNCBZTMkBp6wjXCpv0VLu4YOsve0Tna7SNjlC6KimeeaBIXQAyf",
     "merchant_0a9b0a0e-1d46-4762-9a5a-299eee3777bc":
-    "snd_JOdyV2vyuk5Hx8itpcB8or6OdTQLHnoSKp4GWdLMRpArQSaCg72UzQhpH9RvEbwK"
+    "snd_JOdyV2vyuk5Hx8itpcB8or6OdTQLHnoSKp4GWdLMRpArQSaCg72UzQhpH9RvEbwK",
+    "merchant_0062e33e-62db-4342-a873-c3f3b1a9c0ca":
+    "snd_xbq45K4mwEclI8ht5YHSatiKJ7paFgvKT6VsvG3AlKqyw7qkNa97juUIX1IOxmjz",
+    "merchant_d8453874-2faa-4ed0-8f8d-9cae553e60c2":
+    "snd_48UiegaueusWlJVPvhbCgoDVrTCWrk3wa7LRZ4OdZup7rEKsn7sHSS2TW1BdWotN",
+    "merchant_e6842cb0-39bd-4ff5-b03b-0b414e336a77":
+    "snd_Ulgpdnl8U0HJSpR2KOsIgU4TadoRpd19sV9kp72fu8rD9GGAXX4dTG8Q10J7oU88",
+    "merchant_82b6e5cb-9205-4f9c-88e1-7f40d1e82087":
+    "snd_UCCApcRllvDjqp6vsbl3w12wpIfyKgPgHzPGTWkbzsefsvn1orTBnWyrDxPTA0Js",
+    "merchant_5f3a497c-baab-414e-8f96-ad98c3e1add1":
+    "snd_5Vl3SASXt9F5wh7EjpWREdwbkTY3LRYBKCeBA1msruDEZ0MKkrcsAMLJgXielbzy"
 }
 
 admin_combined_headers = {**admin_api_key_headers, **content_type_headers}
@@ -308,10 +318,10 @@ def create_payment_link(merchant_id: str, amount: int):
     payment_payload = {
         "amount": int(total_amount),
         "description": "Payment for Black Full Length Cargo Pant",
-        # "metadata": {
-        #     "platform_fee": platform_fee,
-        #     "transaction_fee": transaction_fee
-        # },
+        "metadata": {
+            "platform_fee": platform_fee,
+            "transaction_fee": transaction_fee
+        },
         "currency": "USD",
         "payment_link": True,
         "return_url": "https:/hyperswitch.io",
@@ -534,6 +544,53 @@ def get_all_refunds(merchant_id: str, payment_id: str = None):
 #
 #
 #
+@app.get("/get_organization_merchants")
+def get_organization_merchants():
+    organization_merchants_request = f"{sandbox_endpoint}/accounts/list"
+    organization_id = os.environ.get('ORGANIZATION_ID')
+    params = {
+        "organization_id": os.environ.get('ORGANIZATION_ID')
+    }
+    response = requests.get(organization_merchants_request, headers=admin_combined_headers, params=params)
+    print(f"RESPONSE: {response}")
+    if response.status_code == 200:
+        message = f"Successfully fetched merchants for {organization_id} organization."
+        print(message)
+        return {"message": message, "response": response.json()}
+    else:
+        message = f"Failed to fetch merchants given organization: {response.text}"
+        print(message)
+        return {"message": message, "response": {}}
+
+
+@app.get("/get_organization_transactions")
+def get_organization_transactions():
+    all_payments_request = f"{sandbox_endpoint}/payments/list"
+    response = requests.get(all_payments_request, headers=admin_api_key_headers)
+    print(f"RESPONSE: {response}")
+    if response.status_code == 200:
+        message = f"Payments listed successfully for organization."
+        print(message)
+        return {"message": message, "response": response.json()}
+    else:
+        message = f"Failed to list payments: {response.text}"
+        print(message)
+        return {"message": message, "response": {}}
+
+
+@app.get("/get_organization_transactions1")
+def get_organization_transactions1():
+    all_payments_request = f"{sandbox_endpoint}/v2/organization/{os.environ.get('ORGANIZATION_ID')}"
+    response = requests.get(all_payments_request, headers=admin_api_key_headers)
+    print(f"RESPONSE: {response}")
+    if response.status_code == 200:
+        message = f"Payments listed successfully for organization."
+        print(message)
+        return {"message": message, "response": response.json()}
+    else:
+        message = f"Failed to list payments: {response.text}"
+        print(message)
+        return {"message": message, "response": {}}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8005)

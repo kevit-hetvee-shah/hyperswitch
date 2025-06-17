@@ -33,13 +33,41 @@ mapping = {
         "snd_TBWf5U19FqXbWDGRXUoExV8XVoBO7VIihz5KNeUkA6MtRvGZdUwbOi0Vhxv6RlZ2",
     "merchant_1750056339": "snd_vL9nU4gGPe4lXQbbSlW3HIDcQUzcF9bHvV8dk4mwMO2dP7gcqMg9KZFgIswNS9ej",
     "merchant_15034d84-c6e2-49a8-94f4-2285af1936f2":
-        "snd_qkhiSoxHT7gCuFxrYXbJl2wnuFR5XpwPxXamIQ9xnnmdV0rxYm3aeA3kAMdRHfXX"
+        "snd_qkhiSoxHT7gCuFxrYXbJl2wnuFR5XpwPxXamIQ9xnnmdV0rxYm3aeA3kAMdRHfXX",
+    "merchant_53efbb2f-3b52-40a8-830c-f02dbca1ac0e":
+        "dev_zCMn6i6CW51fznwjLuSZjCNmbrLm2XGtSuyhRLr2863gTmFPYHeaFeOQ8zLzfU62",
+    "merchant_d34fd21d-953e-446a-8c65-a48bcb0a12b8":
+        "dev_vxo5Kukmb2S1g8MHrARoT4OKoHduo4Q4HhWQs9XbYhfAB4VlwfHth6h0HFOYMcA8",
+    "merchant_e022b3df-d020-4eb6-a798-937827617b75":
+        "dev_PqMelDwV4wCiEMBbhTbSsm62Am17x8tYf0dS7Y8rGArOYC54CclU9YG2acXdIrd6",
+    "merchant_331ab738-45be-4e62-ab9b-146fbc3ecda5":
+        "dev_KycZWBwcTKZrpmTM2VsuM74YWzqFzwArL6lLGBgCtxu9OCIjwPHZpcuyVfNyjVlN",
+    "merchant_6b10ed12-5e18-44f8-a7ea-89f483e23329":
+        "snd_CQub4g5SD0MfW7aDFwsChsSKpCVKaTtlEvCr9WBunkxDbHNA6szVgUTRjPA42KqC",
+    "merchant_f1fdab77-4fec-4188-aa4e-6d273ae372b0":
+        "snd_tFe6mNuXEfWafPbdIwbNzpf89tOzkkBmS8DaCVshxwKKycsYbyjgXU3hMbAc785i",
+    "merchant_1ee30a9f-9476-493e-a36a-a28fc1c185c4":
+        "snd_c7hM3aenyya8fDN8PLdtzCZpiIGidqYxUced47LFQYfmyvaYQ4YaOhj52q8cP0Kn",
+    "merchant_0da75e21-049e-462d-8f09-01e78cfe670c":
+    "snd_iyWGk1ij3r4A4xQNBwnB8L3tguVOTs5AdMHOKr73F84ade5fBi863pLcki1OURHC",
+    "merchant_6ed42cb7-2edb-426a-b968-865a33394dda":
+        "snd_UpAyhr4ksBAEYuc4uptbAHRBhJmT22AsCxPrZWnGKl0ydEZj9ll24XM39iV7oDSc",
+    "merchant_defd2a4b-587e-4807-9f2c-62f7383b2424":
+    "snd_ODCt6TchezdiYWKVPVeSETZpOjE6Ko19qtuocG1tjLMNveDvBhRSsWg2ucaRagLa",
+    "merchant_622d2eed-f556-4f42-a76c-3edb985771a3":
+    "snd_OfGVX3PDM2U9q1HlsM7YbLdXqYK1wzyBNhqAl4V6LYGy8nM8o9or4fIoOXrDJLeU",
+    "merchant_3a0695d7-7392-42c0-a39c-3b9472c70bed":
+        "snd_cYf1sR6JQo37btx8wLP0GEGV54g8jni1wcW3HnMzj3bXs2MAwUaliiMZKhjNS92g",
+    "merchant_18fda02f-2e10-48f5-bea6-d0deceee9cd5":
+    "snd_IJSGHOHIuciVLRNCBZTMkBp6wjXCpv0VLu4YOsve0Tna7SNjlC6KimeeaBIXQAyf",
+    "merchant_0a9b0a0e-1d46-4762-9a5a-299eee3777bc":
+    "snd_JOdyV2vyuk5Hx8itpcB8or6OdTQLHnoSKp4GWdLMRpArQSaCg72UzQhpH9RvEbwK"
 }
 
 admin_combined_headers = {**admin_api_key_headers, **content_type_headers}
 # merchant_combined_headers = {**merchant_api_key_headers, **content_type_headers}
 # API endpoints
-sandbox_endpoint = "http://172.24.0.57:8080"
+sandbox_endpoint = "http://localhost:8089"
 
 
 @app.post("/onboard_merchant")
@@ -72,7 +100,7 @@ def onboard_merchant(merchant_name: str, primary_contact_person: str,
     merchant_payload = {
         "merchant_id": merchant_id,
         "merchant_name": merchant_name,
-        "organization_id": "org_x4JM5dF0bV2BbBoLFZnk",
+        "organization_id": os.environ.get('ORGANIZATION_ID'),
         "merchant_details": {
             "primary_contact_person": primary_contact_person,
             "primary_phone": primary_phone,
@@ -182,7 +210,6 @@ def add_payment_connector(merchant_id: str):
     """
     add_connector_request = f"{sandbox_endpoint}/account/{merchant_id}/connectors"
     cybersource_connector_payload = {
-        "profile_id": "pro_msluoF24g1CFtSoJOdRU",
         "connector_type": "payment_processor",
         "connector_name": "cybersource",
         "connector_account_details": {
@@ -271,52 +298,80 @@ def add_payment_connector(merchant_id: str):
 
 
 @app.post("/create_payment_link")
-def create_payment_link(merchant_id: str, ):
+def create_payment_link(merchant_id: str, amount: int):
     create_payment_link_request = f"{sandbox_endpoint}/payments"
     merchant_api_key_headers = {"api-key": mapping.get(merchant_id, MERCHANT_API_KEY)}
     merchant_combined_headers = {**merchant_api_key_headers, **content_type_headers}
-    payment_payload = {"amount": 6540,
-                       "currency": "USD",
-                       "payment_link": True,
-                       "return_url": "https:/hyperswitch.io",
-                       "authentication_type": "three_ds",
-                       "session_expiry": 9000,
-                       "business_country": "US",
-                       "payment_method": "card",
-                       "business_label": "default",
-                       "payment_method_data": {
-                           "card": {
-                               "card_number": "4242424242424242",
-                               "card_exp_month": "12",
-                               "card_exp_year": "25",
-                               "card_holder_name": "John Doe",
-                               "card_cvc": "123",
-                               "card_network": "Visa",
-                               "card_issuer": "TEST"
-                           }
-                       },
-                       "payment_link_config": {
-                           "theme": "#4E6ADD",
-                           "logo": "https://hyperswitch.io/favicon.ico",
-                           "seller_name": "HyperSwitch Inc.",
-                           "sdk_layout": "accordion",
-                           "display_sdk_only": False,
-                           "hide_card_nickname_field": True,
-                           "show_card_form_by_default": True,
-                           "payment_button_text": "Proceed to Payment!",
-                           "transaction_details": [
-                               {
-                                   "key": "Policy Number",
-                                   "value": "297472368473924",
-                                   "ui_configuration": {
-                                       "position": 5,
-                                       "is_key_bold": True,
-                                       "is_value_bold": True
-                                   }
-                               }
-                           ]
-                       }
-                       }
+    platform_fee = int(0.01 * amount)  # Assuming 1% platform fee
+    transaction_fee = int(0.02 * amount)  # Assuming 2% transaction fee
+    total_amount = int(amount + platform_fee + transaction_fee)
+    payment_payload = {
+        "amount": int(total_amount),
+        "description": "Payment for Black Full Length Cargo Pant",
+        # "metadata": {
+        #     "platform_fee": platform_fee,
+        #     "transaction_fee": transaction_fee
+        # },
+        "currency": "USD",
+        "payment_link": True,
+        "return_url": "https:/hyperswitch.io",
+        "authentication_type": "no_three_ds",
+        "session_expiry": 9000,
+        "business_country": "US",
+        "payment_method": "card",
+        "business_label": "default",
+        "payment_method_data": {
+            "card": {
+                "card_number": "4242424242424242",
+                "card_exp_month": "12",
+                "card_exp_year": "25",
+                "card_holder_name": "John Doe",
+                "card_cvc": "123",
+                "card_network": "Visa",
+                "card_issuer": "TEST"
+            }
+        },
+        "payment_link_config": {
+            "theme": "#4E6ADD",
+            "logo": "https://cdn.shopify.com/s/files/1/0070/7032/articles/how_20to_20start_20a_20clothing_20brand_40bcfec9-c4c3-4b50-8865-89933a6f5429.png?v=1749486608",
+            "seller_name": "ABC Clothing Store",
+            "sdk_layout": "accordion",
+            "display_sdk_only": False,
+            "hide_card_nickname_field": True,
+            "show_card_form_by_default": True,
+            "payment_button_text": "Proceed to Payment!",
+            "background_image": {
+                "url": "https://img.freepik.com/free-photo/abstract-blue-geometric-shapes-background_24972-1841.jpg",
+                "position": "bottom",
+                "size": "cover"
+            },
+            "transaction_details": [
+                {
+                    "key": "Type",
+                    "value": "Black Full Length Cargo Pant",
+                    "ui_configuration": {
+                        "position": 1,
+                        "is_key_bold": True,
+                        "is_value_bold": True
+                    }
+                },
+                {
+                    "key": "Size",
+                    "value": "S (28)",
+                    "ui_configuration": {
+                        "position": 2
+                    }
+                },
+                {
+                    "key": "Colour",
+                    "value": "Black",
+                    "ui_configuration": {
+                        "position": 3
+                    }
+                }
+            ]
+        }
+    }
     response = requests.post(create_payment_link_request, json=payment_payload,
                              headers=merchant_combined_headers)
     print(f"RESPONSE: {response}")
@@ -327,7 +382,7 @@ def create_payment_link(merchant_id: str, ):
     else:
         message = f"Failed to create payment link: {response.text}"
         print(message)
-        return {"message": message, "response": {}}
+    return {"message": message, "response": {}}
 
 
 @app.get("/list_payment_methods")
@@ -342,17 +397,84 @@ def get_payment_methods():
         "client_secret": client_secret
     }
     response = requests.get(url=payment_methods_request, params=params,
-                             headers=merchant_combined_headers)
+                            headers=merchant_combined_headers)
     print(f"RESPONSE: {response}")
     if response.status_code == 200:
         message = "Payment methods fetched successfully."
         print(message)
         return {"message": message, "response": response.json()}
     else:
-        message = "Failed to fetch payment methods"
+        message = f"Failed to fetch payment methods - {response.text}"
         print(message)
         return {"message": message, "response": {}}
 
+
+@app.get("/payments")
+def get_payments(merchant_id: str, payment_id: str = None):
+    """
+    Get all payments for the merchant.
+    """
+    all_payments_request = f"{sandbox_endpoint}/payments/list"
+    merchant_api_key_headers = {"api-key": mapping.get(merchant_id, MERCHANT_API_KEY)}
+    merchant_combined_headers = {**merchant_api_key_headers, **content_type_headers}
+    if payment_id:
+        response = requests.get(all_payments_request, params={"payment_id": payment_id}, headers=merchant_combined_headers)
+    else:
+        response = requests.get(all_payments_request, headers=merchant_combined_headers)
+    print(f"RESPONSE: {response}")
+    if response.status_code == 200:
+        message = f"Payments listed successfully for merchant {merchant_id}."
+        print(message)
+        return {"message": message, "response": response.json()}
+    else:
+        message = f"Failed to list payments: {response.text}"
+        print(message)
+        return {"message": message, "response": {}}
+
+@app.post("/create_refund")
+def create_refund(merchant_id: str, payment_id: str, amount: int):
+    refund_request = f"{sandbox_endpoint}/refunds"
+    merchant_api_key_headers = {"api-key": mapping.get(merchant_id, MERCHANT_API_KEY)}
+    merchant_combined_headers = {**merchant_api_key_headers, **content_type_headers}
+    refund_payload = {
+        "payment_id": payment_id,
+        "amount": amount,
+        "refund_type": "instant"
+    }
+    response = requests.post(refund_request, json=refund_payload, headers=merchant_combined_headers)
+    # payment must have status succeeded, partially_captured
+    print(f"RESPONSE: {response}")
+    if response.status_code == 200:
+        message = "Refund initiated successfully."
+        print(message)
+        return {"message": message, "response": response.json()}
+    else:
+        message = f"Failed to initiate refund - {response.text}"
+        print(message)
+        return {"message": message, "response": {}}
+
+
+@app.get("/refunds")
+def get_all_refunds(merchant_id: str, payment_id: str = None):
+    """
+    Get all refunds for the merchant.
+    """
+    all_refunds_request = f"{sandbox_endpoint}/refunds/list"
+    merchant_api_key_headers = {"api-key": mapping.get(merchant_id, MERCHANT_API_KEY)}
+    merchant_combined_headers = {**merchant_api_key_headers, **content_type_headers}
+    if payment_id:
+        response = requests.get(all_refunds_request, params={"payment_id": payment_id}, headers=merchant_combined_headers)
+    else:
+        response = requests.get(all_refunds_request, headers=merchant_combined_headers)
+    print(f"RESPONSE: {response}")
+    if response.status_code == 200:
+        message = f"Refunds listed successfully for merchant {merchant_id}."
+        print(message)
+        return {"message": message, "response": response.json()}
+    else:
+        message = f"Failed to list refunds: {response.text}"
+        print(message)
+        return {"message": message, "response": {}}
 
 # @app.post("/create_business_profile")
 # def create_business_profile(merchant_id: str, profile_name: str):

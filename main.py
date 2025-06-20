@@ -1,11 +1,13 @@
 import os
+import secrets
 import uuid
-from pyexpat.errors import messages
-
+from fastapi import FastAPI, Header, Request, HTTPException, Depends
+import hmac, hashlib, base64, time, json
 import requests
 from dotenv import load_dotenv
-from fastapi import FastAPI
 import uvicorn
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from starlette.responses import RedirectResponse, Response
 
 load_dotenv()
 app = FastAPI()
@@ -20,6 +22,26 @@ CYBERSOURCE_MERCHANT_ID = os.environ.get("CYBERSOURCE_MERCHANT_ID")
 admin_api_key_headers = {"api-key": ADMIN_API_KEY}
 
 content_type_headers = {"Content-Type": "application/json"}
+
+data_dict = {
+    "merchant_id": "merchant_0a9b0a0e-1d46-4762-9a5a-299eee3777bc",
+    "api_key": "snd_JOdyV2vyuk5Hx8itpcB8or6OdTQLHnoSKp4GWdLMRpArQSaCg72UzQhpH9RvEbwK",
+    "payment_response_hash_key": "HTuaP9q2l2MHaZfHXi1EjNqtH9Z52SHscrNELg2aRw7flElF29ChNeMSjgpw4hCb",
+    "profiles": [
+        {"profile_id": "pro_Y58GwHnsyf9Uw09KTFbC", "merchant_connector_id": "mca_NyWXY56NjeJG6tyDd7Yp",
+         "profile_name": "US_default"},
+        {"profile_id": "pro_WOem7XduQBA8D6CqTqvT", "merchant_connector_id": "mca_Ms7jGE6DzZa4w6fULBg9",
+         "profile_name": "Profile 1"},
+        {"profile_id": "pro_NDmWdTYdJMOmdH2nZvMh", "merchant_connector_id": "mca_EXFgkObv3Ev7Wzk4fpc6",
+         "profile_name": "Profile 2"},
+        {"profile_id": "pro_7jAtP8hpv20vctRZDc1T", "merchant_connector_id": "mca_NLaMeRsID0HimfrTY1z9",
+         "profile_name": "Profile 3"},
+        {"profile_id": "pro_Wz1NCfSnkptsycR1WyDj", "merchant_connector_id": "mca_NEDTP5n3F1Ja0Ne6fdiT",
+         "profile_name": "Profile 4"},
+        {"profile_id": "pro_Th1mwfYRaYQesmPONvZy", "merchant_connector_id": "mca_4secqwnrCKyvThXA1jQV",
+         "profile_name": "Profile 5"},
+    ]
+}
 mapping = {
     "merchant_b13834b8-79a6-41cf-aa35-625837a365b8":
         "dev_x2Nm7DYAmhiwH9vRyycOVZfM2ThHLJTnUBWqHFGzlAGGLuXleibLGo5X3CEMaexo",
@@ -49,64 +71,91 @@ mapping = {
     "merchant_1ee30a9f-9476-493e-a36a-a28fc1c185c4":
         "snd_c7hM3aenyya8fDN8PLdtzCZpiIGidqYxUced47LFQYfmyvaYQ4YaOhj52q8cP0Kn",
     "merchant_0da75e21-049e-462d-8f09-01e78cfe670c":
-    "snd_iyWGk1ij3r4A4xQNBwnB8L3tguVOTs5AdMHOKr73F84ade5fBi863pLcki1OURHC",
+        "snd_iyWGk1ij3r4A4xQNBwnB8L3tguVOTs5AdMHOKr73F84ade5fBi863pLcki1OURHC",
     "merchant_6ed42cb7-2edb-426a-b968-865a33394dda":
         "snd_UpAyhr4ksBAEYuc4uptbAHRBhJmT22AsCxPrZWnGKl0ydEZj9ll24XM39iV7oDSc",
     "merchant_defd2a4b-587e-4807-9f2c-62f7383b2424":
-    "snd_ODCt6TchezdiYWKVPVeSETZpOjE6Ko19qtuocG1tjLMNveDvBhRSsWg2ucaRagLa",
+        "snd_ODCt6TchezdiYWKVPVeSETZpOjE6Ko19qtuocG1tjLMNveDvBhRSsWg2ucaRagLa",
     "merchant_622d2eed-f556-4f42-a76c-3edb985771a3":
-    "snd_OfGVX3PDM2U9q1HlsM7YbLdXqYK1wzyBNhqAl4V6LYGy8nM8o9or4fIoOXrDJLeU",
+        "snd_OfGVX3PDM2U9q1HlsM7YbLdXqYK1wzyBNhqAl4V6LYGy8nM8o9or4fIoOXrDJLeU",
     "merchant_3a0695d7-7392-42c0-a39c-3b9472c70bed":
         "snd_cYf1sR6JQo37btx8wLP0GEGV54g8jni1wcW3HnMzj3bXs2MAwUaliiMZKhjNS92g",
     "merchant_18fda02f-2e10-48f5-bea6-d0deceee9cd5":
-    "snd_IJSGHOHIuciVLRNCBZTMkBp6wjXCpv0VLu4YOsve0Tna7SNjlC6KimeeaBIXQAyf",
+        "snd_IJSGHOHIuciVLRNCBZTMkBp6wjXCpv0VLu4YOsve0Tna7SNjlC6KimeeaBIXQAyf",
     "merchant_0a9b0a0e-1d46-4762-9a5a-299eee3777bc":
-    "snd_JOdyV2vyuk5Hx8itpcB8or6OdTQLHnoSKp4GWdLMRpArQSaCg72UzQhpH9RvEbwK",
+        "snd_JOdyV2vyuk5Hx8itpcB8or6OdTQLHnoSKp4GWdLMRpArQSaCg72UzQhpH9RvEbwK",
     "merchant_0062e33e-62db-4342-a873-c3f3b1a9c0ca":
-    "snd_xbq45K4mwEclI8ht5YHSatiKJ7paFgvKT6VsvG3AlKqyw7qkNa97juUIX1IOxmjz",
+        "snd_xbq45K4mwEclI8ht5YHSatiKJ7paFgvKT6VsvG3AlKqyw7qkNa97juUIX1IOxmjz",
     "merchant_d8453874-2faa-4ed0-8f8d-9cae553e60c2":
-    "snd_48UiegaueusWlJVPvhbCgoDVrTCWrk3wa7LRZ4OdZup7rEKsn7sHSS2TW1BdWotN",
+        "snd_48UiegaueusWlJVPvhbCgoDVrTCWrk3wa7LRZ4OdZup7rEKsn7sHSS2TW1BdWotN",
     "merchant_e6842cb0-39bd-4ff5-b03b-0b414e336a77":
-    "snd_Ulgpdnl8U0HJSpR2KOsIgU4TadoRpd19sV9kp72fu8rD9GGAXX4dTG8Q10J7oU88",
+        "snd_Ulgpdnl8U0HJSpR2KOsIgU4TadoRpd19sV9kp72fu8rD9GGAXX4dTG8Q10J7oU88",
     "merchant_82b6e5cb-9205-4f9c-88e1-7f40d1e82087":
-    "snd_UCCApcRllvDjqp6vsbl3w12wpIfyKgPgHzPGTWkbzsefsvn1orTBnWyrDxPTA0Js",
+        "snd_UCCApcRllvDjqp6vsbl3w12wpIfyKgPgHzPGTWkbzsefsvn1orTBnWyrDxPTA0Js",
     "merchant_5f3a497c-baab-414e-8f96-ad98c3e1add1":
-    "snd_5Vl3SASXt9F5wh7EjpWREdwbkTY3LRYBKCeBA1msruDEZ0MKkrcsAMLJgXielbzy"
+        "snd_5Vl3SASXt9F5wh7EjpWREdwbkTY3LRYBKCeBA1msruDEZ0MKkrcsAMLJgXielbzy"
 }
 
+profile_response_hash_mapping = {
+    "pro_WOem7XduQBA8D6CqTqvT":
+        "HTuaP9q2l2MHaZfHXi1EjNqtH9Z52SHscrNELg2aRw7flElF29ChNeMSjgpw4hCb",
+    "pro_NDmWdTYdJMOmdH2nZvMh":
+        "HTuaP9q2l2MHaZfHXi1EjNqtH9Z52SHscrNELg2aRw7flElF29ChNeMSjgpw4hCb",
+    "pro_7jAtP8hpv20vctRZDc1T":
+        "HTuaP9q2l2MHaZfHXi1EjNqtH9Z52SHscrNELg2aRw7flElF29ChNeMSjgpw4hCb",
+    "pro_Wz1NCfSnkptsycR1WyDj":
+        "HTuaP9q2l2MHaZfHXi1EjNqtH9Z52SHscrNELg2aRw7flElF29ChNeMSjgpw4hCb",
+    "pro_Th1mwfYRaYQesmPONvZy":
+        "HTuaP9q2l2MHaZfHXi1EjNqtH9Z52SHscrNELg2aRw7flElF29ChNeMSjgpw4hCb",
+    "pro_Y58GwHnsyf9Uw09KTFbC":
+        "HTuaP9q2l2MHaZfHXi1EjNqtH9Z52SHscrNELg2aRw7flElF29ChNeMSjgpw4hCb"
+}
+
+connector_id_response_hash_key_mapping = {
+    "pro_Y58GwHnsyf9Uw09KTFbC": "mca_NyWXY56NjeJG6tyDd7Yp",
+    "pro_WOem7XduQBA8D6CqTqvT": "mca_Ms7jGE6DzZa4w6fULBg9",
+    "pro_NDmWdTYdJMOmdH2nZvMh": "mca_EXFgkObv3Ev7Wzk4fpc6",
+    "pro_7jAtP8hpv20vctRZDc1T": "mca_NLaMeRsID0HimfrTY1z9",
+    "pro_Wz1NCfSnkptsycR1WyDj": "mca_NEDTP5n3F1Ja0Ne6fdiT",
+    "pro_Th1mwfYRaYQesmPONvZy": "mca_4secqwnrCKyvThXA1jQV"
+}
+security = HTTPBasic()
 admin_combined_headers = {**admin_api_key_headers, **content_type_headers}
 # merchant_combined_headers = {**merchant_api_key_headers, **content_type_headers}
 # API endpoints
 sandbox_endpoint = "http://localhost:8089"
 
 
-@app.post("/onboard_merchant")
-def onboard_merchant(merchant_name: str, primary_contact_person: str,
-                     primary_phone: str,
-                     primary_email: str,
-                     website: str,
-                     about_business: str,
-                     city: str,
-                     country: str,
-                     zip_code: str,
-                     state: str,
-                     first_name: str,
-                     last_name: str,
-                     address_line1: str,
-                     business_type: str,
-                     address_line2: str = None,
-                     address_line3: str = None,
-                     secondary_contact_person: str = None,
-                     secondary_phone: str = None,
-                     secondary_email: str = None,
-                     merchant_id: str = None,
-                     metadata=None
-                     ):
+@app.post("/onboard_merchant", tags=["Merchants"])
+def onboard_merchant(
+        merchant_name: str = "Test Merchant",
+        primary_contact_person: str = "ABC XYZ",
+        primary_phone: str = "3485784543",
+        primary_email: str = "abc@gmail.com",
+        website: str = "abc.com",
+        about_business: str = "Test Business",
+        city: str = "Rajkot",
+        country: str = "US",
+        zip_code: str = "360009",
+        state: str = "Gujarat",
+        first_name: str = "Test",
+        last_name: str = "User",
+        address_line1: str = "ABC",
+        business_type: str = "default",
+        address_line2: str = None,
+        address_line3: str = None,
+        secondary_contact_person: str = None,
+        secondary_phone: str = None,
+        secondary_email: str = None,
+        merchant_id: str = None,
+        metadata=None
+):
     """
     Onboard a merchant by creating an account and API keys.
     """
     if not merchant_id:
-        merchant_id = f"merchant_{uuid.uuid4()}"
+        unique_id = uuid.uuid4()
+        merchant_id = f"merchant_{str(unique_id).replace('-', '_')}"
     merchant_payload = {
         "merchant_id": merchant_id,
         "merchant_name": merchant_name,
@@ -122,8 +171,7 @@ def onboard_merchant(merchant_name: str, primary_contact_person: str,
             "about_business": about_business,
             "address": {
                 "city": city,
-                # "country": country,
-                "country": "US",
+                "country": country,
                 "line1": address_line1,
                 "line2": address_line2,
                 "line3": address_line3,
@@ -134,10 +182,8 @@ def onboard_merchant(merchant_name: str, primary_contact_person: str,
             }
         },
         "primary_business_details": [{
-            # "country": country,
-            # "business": business_type,
-            "country": "US",
-            "business": "default"
+            "country": country,
+            "business": business_type
         }],
         "metadata": metadata if metadata else {}
     }
@@ -154,7 +200,7 @@ def onboard_merchant(merchant_name: str, primary_contact_person: str,
         return {"message": message, "response": {}}
 
 
-@app.get("/list_api_keys")
+@app.get("/list_api_keys", tags=["API Keys"])
 def list_api_keys(merchant_id: str):
     """
         List API keys for the merchant.
@@ -172,7 +218,7 @@ def list_api_keys(merchant_id: str):
         return {"message": message, "response": {}}
 
 
-@app.post("/generate_api_keys")
+@app.post("/generate_api_keys", tags=["API Keys"])
 def generate_api_keys(merchant_id: str):
     """
         Generate API keys for the merchant.
@@ -213,13 +259,14 @@ def health_check():
         return {"message": message, "response": {}}
 
 
-@app.post("/add_payment_connector")
-def add_payment_connector(merchant_id: str):
+@app.post("/add_payment_connector", tags=["Payment Connector"])
+def add_payment_connector(merchant_id: str, profile_id: str = None):
     """
     Add a payment connector for the merchant.
     """
     add_connector_request = f"{sandbox_endpoint}/account/{merchant_id}/connectors"
     cybersource_connector_payload = {
+        "profile_id": profile_id,
         "connector_type": "payment_processor",
         "connector_name": "cybersource",
         "connector_account_details": {
@@ -307,8 +354,8 @@ def add_payment_connector(merchant_id: str):
         return {"message": message, "response": {}}
 
 
-@app.post("/create_payment_link")
-def create_payment_link(merchant_id: str, amount: int):
+@app.post("/create_payment_link", tags=["Payments"])
+def create_payment_link(merchant_id: str, amount: int, profile_id: str):
     create_payment_link_request = f"{sandbox_endpoint}/payments"
     merchant_api_key_headers = {"api-key": mapping.get(merchant_id, MERCHANT_API_KEY)}
     merchant_combined_headers = {**merchant_api_key_headers, **content_type_headers}
@@ -316,13 +363,16 @@ def create_payment_link(merchant_id: str, amount: int):
     transaction_fee = int(0.02 * amount)  # Assuming 2% transaction fee
     total_amount = int(amount + platform_fee + transaction_fee)
     payment_payload = {
+        "profile_id": profile_id,
         "amount": int(total_amount),
+        "amount_to_capture": total_amount,
         "description": "Payment for Black Full Length Cargo Pant",
         "metadata": {
             "platform_fee": platform_fee,
             "transaction_fee": transaction_fee
         },
         "currency": "USD",
+        "connector": ["stripe_test"],
         "payment_link": True,
         "return_url": "https:/hyperswitch.io",
         "authentication_type": "no_three_ds",
@@ -419,8 +469,8 @@ def get_payment_methods():
         return {"message": message, "response": {}}
 
 
-@app.get("/payments")
-def get_payments(merchant_id: str, payment_id: str = None):
+@app.get("/payments", tags=["Payments"])
+def get_payments(merchant_id: str, payment_id: str = None, profile_id: str = None):
     """
     Get all payments for the merchant.
     """
@@ -428,7 +478,12 @@ def get_payments(merchant_id: str, payment_id: str = None):
     merchant_api_key_headers = {"api-key": mapping.get(merchant_id, MERCHANT_API_KEY)}
     merchant_combined_headers = {**merchant_api_key_headers, **content_type_headers}
     if payment_id:
-        response = requests.get(all_payments_request, params={"payment_id": payment_id}, headers=merchant_combined_headers)
+        response = requests.get(f"{sandbox_endpoint}/payments/{payment_id}", params={"payment_id": payment_id},
+                                headers=merchant_combined_headers)
+    elif profile_id:
+        response = requests.get(f"{sandbox_endpoint}/payments/profile/list",
+                                headers={**merchant_combined_headers, **{"X-Profile-Id":
+                                                                             profile_id}})
     else:
         response = requests.get(all_payments_request, headers=merchant_combined_headers)
     print(f"RESPONSE: {response}")
@@ -441,14 +496,15 @@ def get_payments(merchant_id: str, payment_id: str = None):
         print(message)
         return {"message": message, "response": {}}
 
-@app.post("/create_refund")
-def create_refund(merchant_id: str, payment_id: str, amount: int):
+
+@app.post("/create_refund", tags=["Refund"])
+def create_refund(merchant_id: str, payment_id: str):
     refund_request = f"{sandbox_endpoint}/refunds"
     merchant_api_key_headers = {"api-key": mapping.get(merchant_id, MERCHANT_API_KEY)}
     merchant_combined_headers = {**merchant_api_key_headers, **content_type_headers}
     refund_payload = {
         "payment_id": payment_id,
-        "amount": amount,
+        # "amount": amount,
         "refund_type": "instant"
     }
     response = requests.post(refund_request, json=refund_payload, headers=merchant_combined_headers)
@@ -464,7 +520,7 @@ def create_refund(merchant_id: str, payment_id: str, amount: int):
         return {"message": message, "response": {}}
 
 
-@app.get("/refunds")
+@app.post("/refunds", tags=["Refund"])
 def get_all_refunds(merchant_id: str, payment_id: str = None):
     """
     Get all refunds for the merchant.
@@ -473,9 +529,10 @@ def get_all_refunds(merchant_id: str, payment_id: str = None):
     merchant_api_key_headers = {"api-key": mapping.get(merchant_id, MERCHANT_API_KEY)}
     merchant_combined_headers = {**merchant_api_key_headers, **content_type_headers}
     if payment_id:
-        response = requests.get(all_refunds_request, params={"payment_id": payment_id}, headers=merchant_combined_headers)
+        response = requests.post(all_refunds_request, json={"payment_id": payment_id},
+                                headers=merchant_combined_headers)
     else:
-        response = requests.get(all_refunds_request, headers=merchant_combined_headers)
+        response = requests.post(all_refunds_request, headers=merchant_combined_headers, json={})
     print(f"RESPONSE: {response}")
     if response.status_code == 200:
         message = f"Refunds listed successfully for merchant {merchant_id}."
@@ -486,65 +543,101 @@ def get_all_refunds(merchant_id: str, payment_id: str = None):
         print(message)
         return {"message": message, "response": {}}
 
-# @app.post("/create_business_profile")
-# def create_business_profile(merchant_id: str, profile_name: str):
-#     """
-#     Create a business profile for the merchant.
-#     """
-#     create_profile_request = f"{sandbox_endpoint}/account/{merchant_id}/business_profile"
-#     profile_payload = {
-#         "profile_name": profile_name
-#     }
-#     response = requests.post(create_profile_request, json=profile_payload, headers="merchant_combined_headers")
-#     print(f"RESPONSE: {response}")
-#     if response.status_code == 200:
-#         message = f"Business profile {profile_name} created successfully for merchant {merchant_id}."
-#         print(message)
-#         return {"message": message, "response": response.json()}
-#     else:
-#         message = f"Failed to create business profile: {response.text}"
-#         print(message)
-#         return {"message": message, "response": {}}
-#
-#
-# @app.get("/list_business_profiles")
-# def list_business_profiles(merchant_id: str):
-#     """
-#     List business profiles for the merchant.
-#     """
-#     list_profiles_request = f"{sandbox_endpoint}/account/{merchant_id}/business_profile"
-#     response = requests.get(list_profiles_request, headers="merchant_combined_headers")
-#     print(f"RESPONSE: {response}")
-#     if response.status_code == 200:
-#         message = f"Business profiles listed successfully for merchant {merchant_id}."
-#         print(message)
-#         return {"message": message, "response": response.json()}
-#     else:
-#         message = f"Failed to list business profiles: {response.text}"
-#         print(message)
-#         return {"message": message, "response": {}}
-#
-#
-# @app.delete("/delete_business_profile")
-# def delete_business_profile(merchant_id: str, profile_id: str):
-#     """
-#     Delete a business profile for the merchant.
-#     """
-#     delete_profile_request = f"{sandbox_endpoint}/account/{merchant_id}/business_profile/{profile_id}"
-#     response = requests.delete(delete_profile_request, headers=admin_combined_headers)
-#     print(f"RESPONSE: {response}")
-#     if response.status_code == 200:
-#         message = f"Business profile {profile_id} deleted successfully for merchant {merchant_id}."
-#         print(message)
-#         return {"message": message, "response": response.json()}
-#     else:
-#         message = f"Failed to delete business profile: {response.text}"
-#         print(message)
-#         return {"message": message, "response": {}}
-#
-#
-#
-@app.get("/get_organization_merchants")
+
+@app.post("/create_business_profile", tags=["Business Profile"])
+def create_business_profile(merchant_id: str, profile_name: str):
+    """
+    Create a business profile for the merchant.
+    """
+    create_profile_request = f"{sandbox_endpoint}/account/{merchant_id}/business_profile"
+    profile_payload = {
+        "profile_name": profile_name
+    }
+    merchant_api_key_headers = {"api-key": mapping.get(merchant_id, MERCHANT_API_KEY)}
+    merchant_combined_headers = {**merchant_api_key_headers, **content_type_headers}
+    response = requests.post(create_profile_request, json=profile_payload, headers=merchant_combined_headers)
+    print(f"RESPONSE: {response}")
+    if response.status_code == 200:
+        message = f"Business profile {profile_name} created successfully for merchant {merchant_id}."
+        print(message)
+        return {"message": message, "response": response.json()}
+    else:
+        message = f"Failed to create business profile: {response.text}"
+        print(message)
+        return {"message": message, "response": {}}
+
+
+@app.get("/list_business_profiles", tags=["Business Profile"])
+def list_business_profiles(merchant_id: str):
+    """
+    List business profiles for the merchant.
+    """
+    list_profiles_request = f"{sandbox_endpoint}/account/{merchant_id}/business_profile"
+    merchant_api_key_headers = {"api-key": mapping.get(merchant_id, MERCHANT_API_KEY)}
+    merchant_combined_headers = {**merchant_api_key_headers, **content_type_headers}
+    response = requests.get(list_profiles_request, headers=merchant_combined_headers)
+    print(f"RESPONSE: {response}")
+    if response.status_code == 200:
+        message = f"Business profiles listed successfully for merchant {merchant_id}."
+        print(message)
+        return {"message": message, "response": response.json()}
+    else:
+        message = f"Failed to list business profiles: {response.text}"
+        print(message)
+        return {"message": message, "response": {}}
+
+
+@app.post("/update_business_profile", tags=["Business Profile"])
+def update_business_profile(merchant_id: str, profile_id: str):
+    """
+    Update a business profile for the merchant.
+    """
+    update_profile_request = f"{sandbox_endpoint}/account/{merchant_id}/business_profile/{profile_id}"
+    merchant_connector_id = connector_id_response_hash_key_mapping[profile_id]
+    profile_payload = {
+        "webhook_details": {
+            "webhook_url": f"http://localhost:8089/webhooks/{merchant_id}/{merchant_connector_id}",
+            # "webhook_username": "webhook_user",
+            # "webhook_password": "webhook_pass",
+            "webhook_version": "v1",
+            "payment_created_enabled": True,
+            "payment_succeeded_enabled": True,
+            "payment_failed_enabled": True,
+        }
+    }
+    merchant_api_key_headers = {"api-key": mapping.get(merchant_id, MERCHANT_API_KEY)}
+    merchant_combined_headers = {**merchant_api_key_headers, **content_type_headers}
+    response = requests.post(update_profile_request, json=profile_payload, headers=merchant_combined_headers)
+    print(f"RESPONSE: {response}")
+    if response.status_code == 200:
+        message = f"Business profile {profile_id} updated successfully for merchant {merchant_id}."
+        print(message)
+        return {"message": message, "response": response.json()}
+    else:
+        message = f"Failed to update business profile: {response.text}"
+        print(message)
+        return {"message": message, "response": {}}
+
+
+@app.delete("/delete_business_profile", tags=["Business Profile"])
+def delete_business_profile(merchant_id: str, profile_id: str):
+    """
+    Delete a business profile for the merchant.
+    """
+    delete_profile_request = f"{sandbox_endpoint}/account/{merchant_id}/business_profile/{profile_id}"
+    response = requests.delete(delete_profile_request, headers=admin_combined_headers)
+    print(f"RESPONSE: {response}")
+    if response.status_code == 200:
+        message = f"Business profile {profile_id} deleted successfully for merchant {merchant_id}."
+        print(message)
+        return {"message": message, "response": response.json()}
+    else:
+        message = f"Failed to delete business profile: {response.text}"
+        print(message)
+        return {"message": message, "response": {}}
+
+
+@app.get("/get_organization_merchants", tags=["Merchants"])
 def get_organization_merchants():
     organization_merchants_request = f"{sandbox_endpoint}/accounts/list"
     organization_id = os.environ.get('ORGANIZATION_ID')
@@ -563,34 +656,41 @@ def get_organization_merchants():
         return {"message": message, "response": {}}
 
 
-@app.get("/get_organization_transactions")
-def get_organization_transactions():
-    all_payments_request = f"{sandbox_endpoint}/payments/list"
-    response = requests.get(all_payments_request, headers=admin_api_key_headers)
-    print(f"RESPONSE: {response}")
-    if response.status_code == 200:
-        message = f"Payments listed successfully for organization."
-        print(message)
-        return {"message": message, "response": response.json()}
-    else:
-        message = f"Failed to list payments: {response.text}"
-        print(message)
-        return {"message": message, "response": {}}
+@app.post("/webhooks/{merchant_id}/{merchant_connector_id}")
+async def hyperswitch_webhook(req: Request, merchant_id: str, merchant_connector_id: str):
+    print("WEBHOOK RECEIVED")
+    payload = await req.json()
+    body = await req.body()
+    signature = req.headers.get("x-webhook-signature-512")
+    if not signature:
+        raise HTTPException(400, "Missing signature")
+    secret = b"HTuaP9q2l2MHaZfHXi1EjNqtH9Z52SHscrNELg2aRw7flElF29ChNeMSjgpw4hCb"
+    print("PAYLOAD:", payload)
+    print("SIGNATURE:", signature)
+    print("BODY:", body)
+    digest = hmac.new(secret, body, hashlib.sha512).hexdigest()
+    if not hmac.compare_digest(digest, signature):
+        raise HTTPException(400, "Invalid signature")
+    return {"status": "ok"}
 
 
-@app.get("/get_organization_transactions1")
-def get_organization_transactions1():
-    all_payments_request = f"{sandbox_endpoint}/v2/organization/{os.environ.get('ORGANIZATION_ID')}"
-    response = requests.get(all_payments_request, headers=admin_api_key_headers)
-    print(f"RESPONSE: {response}")
-    if response.status_code == 200:
-        message = f"Payments listed successfully for organization."
-        print(message)
-        return {"message": message, "response": response.json()}
-    else:
-        message = f"Failed to list payments: {response.text}"
-        print(message)
-        return {"message": message, "response": {}}
+@app.get("/")
+def home():
+    return RedirectResponse("/docs")
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8005)
+
+
+"""
+Run all services:
+docker compose --profile full_setup --profile scheduler --profile full_kv --profile clustered_redis --profile monitoring --profile olap up
+
+FastAPI server:
+python main.py or uvicorn main:app --reload --port 8005
+
+Tunnel the server to the internet using ngrok:
+ngrok http 8089
+"""
+#

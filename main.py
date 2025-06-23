@@ -7,10 +7,15 @@ import requests
 from dotenv import load_dotenv
 import uvicorn
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from sqlalchemy.orm import Session
 from starlette.responses import RedirectResponse, Response
+from database import Base, get_db
 
 load_dotenv()
 app = FastAPI()
+
+all_models = Base.classes.keys()
+Payments = Base.classes.payment_attempt
 
 ADMIN_API_KEY = os.environ.get("ADMIN_API_KEY")
 MERCHANT_API_KEY = os.environ.get("MERCHANT_API_KEY")
@@ -362,6 +367,7 @@ def create_payment_link(merchant_id: str, amount: int, profile_id: str):
     platform_fee = int(0.01 * amount)  # Assuming 1% platform fee
     transaction_fee = int(0.02 * amount)  # Assuming 2% transaction fee
     total_amount = int(amount + platform_fee + transaction_fee)
+
     payment_payload = {
         "profile_id": profile_id,
         "amount": int(total_amount),
@@ -530,7 +536,7 @@ def get_all_refunds(merchant_id: str, payment_id: str = None):
     merchant_combined_headers = {**merchant_api_key_headers, **content_type_headers}
     if payment_id:
         response = requests.post(all_refunds_request, json={"payment_id": payment_id},
-                                headers=merchant_combined_headers)
+                                 headers=merchant_combined_headers)
     else:
         response = requests.post(all_refunds_request, headers=merchant_combined_headers, json={})
     print(f"RESPONSE: {response}")
@@ -682,7 +688,6 @@ def home():
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8005)
 
-
 """
 Run all services:
 docker compose --profile full_setup --profile scheduler --profile full_kv --profile clustered_redis --profile monitoring --profile olap up
@@ -692,5 +697,17 @@ python main.py or uvicorn main:app --reload --port 8005
 
 Tunnel the server to the internet using ngrok:
 ngrok http 8089
+
+FRM (Fraud Risk Management) Connector Issues
+Webhooks Stop Due to FRM Failing, Not Just Deletion
+Once FRM fails during the post-auth step:
+ - Hyperswitch halts the flow.
+ - It doesn’t progress to webhook dispatch.
+Deleting or disabling the FRM connector doesn’t automatically resume normal flow—Hyperswitch may still be in a “stuck” state.
+
+Remove and restart Hyperswitch thoroughly after disabling FRM
+
+Use Riskified only, avoiding Signifyd until FRM HTTP errors are resolved.
+Or wait for a patch release from Hyperswitch that addresses the 303 bug for Signifyd.
 """
 #

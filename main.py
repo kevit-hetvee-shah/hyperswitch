@@ -1,6 +1,8 @@
 import os
 import secrets
 import uuid
+from datetime import datetime, timedelta
+
 from fastapi import FastAPI, Header, Request, HTTPException, Depends
 import hmac, hashlib, base64, time, json
 import requests
@@ -358,6 +360,22 @@ def add_payment_connector(merchant_id: str, profile_id: str = None):
         print(message)
         return {"message": message, "response": {}}
 
+@app.delete("/delete_payment_connector", tags=["Payment Connector"])
+def delete_payment_connector(merchant_id: str, connector_id: str):
+    """
+    Delete a payment connector for the merchant.
+    """
+    delete_connector_request = f"{sandbox_endpoint}/account/{merchant_id}/connectors/{connector_id}"
+    response = requests.delete(delete_connector_request, headers=admin_combined_headers)
+    print(f"RESPONSE: {response}")
+    if response.status_code == 200:
+        message = f"Payment connector {connector_id} deleted successfully for merchant {merchant_id}."
+        print(message)
+        return {"message": message, "response": response.json()}
+    else:
+        message = f"Failed to delete payment connector: {response.text}"
+        print(message)
+        return {"message": message, "response": {}}
 
 @app.post("/create_payment_link", tags=["Payments"])
 def create_payment_link(merchant_id: str, amount: int, profile_id: str):
@@ -377,8 +395,8 @@ def create_payment_link(merchant_id: str, amount: int, profile_id: str):
             "platform_fee": platform_fee,
             "transaction_fee": transaction_fee
         },
+        "connector": ["cybersource", "bitpay","cashtocode", "stripe"],
         "currency": "USD",
-        "connector": ["stripe_test"],
         "payment_link": True,
         "return_url": "https:/hyperswitch.io",
         "authentication_type": "no_three_ds",
@@ -397,6 +415,7 @@ def create_payment_link(merchant_id: str, amount: int, profile_id: str):
                 "card_issuer": "TEST"
             }
         },
+
         "payment_link_config": {
             "theme": "#4E6ADD",
             "logo": "https://cdn.shopify.com/s/files/1/0070/7032/articles/how_20to_20start_20a_20clothing_20brand_40bcfec9-c4c3-4b50-8865-89933a6f5429.png?v=1749486608",
@@ -684,7 +703,63 @@ async def hyperswitch_webhook(req: Request, merchant_id: str, merchant_connector
 def home():
     return RedirectResponse("/docs")
 
+"""
+import jwt
 
+JWT_SECRET = "secret"
+JWT_ALGORITHM = "HS256"
+
+
+@app.post("/analytics", tags=["Analytics"])
+def analytics():
+    payload = {
+        "user_id": "c7353da9-2a86-47d5-abde-5eede48bfed3",
+        "merchant_id": "merchant_0a9b0a0e-1d46-4762-9a5a-299eee3777bc",
+        "role_id": "org_admin",
+        "exp": int((datetime.utcnow() + timedelta(minutes=30)).timestamp()),
+        "org_id": "org_GDkwz29PpqlZzdeLRM11",
+        "profile_id": "pro_Y58GwHnsyf9Uw09KTFbC",
+        "tenant_id": "public"
+    }
+
+    token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+    headers = {
+        "Accept": "*/*",
+        "Content-Type": "application/json",
+        "QueryType": "SingleStat",
+        "X-Merchant-Id": payload["merchant_id"],
+        "X-Profile-Id": payload["profile_id"],
+        "api-key": "hyperswitch",
+        "authorization": f"Bearer {token}"
+    }
+
+    payload_data = [
+        {
+            "timeRange": {
+                "startTime": "2025-06-16T18:30:00Z",
+                "endTime": "2025-06-24T07:18:49Z"
+            },
+            "mode": "ORDER",
+            "source": "BATCH",
+            "metrics": [
+                "payment_success_rate",
+                "payment_count",
+                "payment_success_count",
+                "connector_success_rate"
+            ],
+            "delta": True
+        }
+    ]
+
+    response = requests.post(
+        "http://localhost:8089/analytics/v1/org/metrics/payments",
+        headers=headers,
+        json=payload_data
+    )
+    breakpoint()
+
+"""
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8005)
 

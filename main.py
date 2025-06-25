@@ -20,7 +20,6 @@ all_models = Base.classes.keys()
 Payments = Base.classes.payment_attempt
 
 ADMIN_API_KEY = os.environ.get("ADMIN_API_KEY")
-MERCHANT_API_KEY = os.environ.get("MERCHANT_API_KEY")
 CYBERSOURCE_API_KEY = os.environ.get("CYBERSOURCE_API_KEY")
 CYBERSOURCE_SHARED_SECRET = os.environ.get("CYBERSOURCE_SHARED_SECRET")
 CYBERSOURCE_MERCHANT_ID = os.environ.get("CYBERSOURCE_MERCHANT_ID")
@@ -30,106 +29,12 @@ admin_api_key_headers = {"api-key": ADMIN_API_KEY}
 
 content_type_headers = {"Content-Type": "application/json"}
 
-data_dict = {
-    "merchant_id": "merchant_0a9b0a0e-1d46-4762-9a5a-299eee3777bc",
-    "api_key": "snd_JOdyV2vyuk5Hx8itpcB8or6OdTQLHnoSKp4GWdLMRpArQSaCg72UzQhpH9RvEbwK",
-    "payment_response_hash_key": "HTuaP9q2l2MHaZfHXi1EjNqtH9Z52SHscrNELg2aRw7flElF29ChNeMSjgpw4hCb",
-    "profiles": [
-        {"profile_id": "pro_Y58GwHnsyf9Uw09KTFbC", "merchant_connector_id": "mca_NyWXY56NjeJG6tyDd7Yp",
-         "profile_name": "US_default"},
-        {"profile_id": "pro_WOem7XduQBA8D6CqTqvT", "merchant_connector_id": "mca_Ms7jGE6DzZa4w6fULBg9",
-         "profile_name": "Profile 1"},
-        {"profile_id": "pro_NDmWdTYdJMOmdH2nZvMh", "merchant_connector_id": "mca_EXFgkObv3Ev7Wzk4fpc6",
-         "profile_name": "Profile 2"},
-        {"profile_id": "pro_7jAtP8hpv20vctRZDc1T", "merchant_connector_id": "mca_NLaMeRsID0HimfrTY1z9",
-         "profile_name": "Profile 3"},
-        {"profile_id": "pro_Wz1NCfSnkptsycR1WyDj", "merchant_connector_id": "mca_NEDTP5n3F1Ja0Ne6fdiT",
-         "profile_name": "Profile 4"},
-        {"profile_id": "pro_Th1mwfYRaYQesmPONvZy", "merchant_connector_id": "mca_4secqwnrCKyvThXA1jQV",
-         "profile_name": "Profile 5"},
-    ]
-}
-mapping = {
-    "merchant_b13834b8-79a6-41cf-aa35-625837a365b8":
-        "dev_x2Nm7DYAmhiwH9vRyycOVZfM2ThHLJTnUBWqHFGzlAGGLuXleibLGo5X3CEMaexo",
-    "merchant_591298df-44e9-4b9a-b331-e517cac5492c":
-        "dev_DPa0EeUNg2hngeaEMp2P7JawXXikj8BYwn5DdInEW9asRJAEqMlo8Dxtgu7Yc1Ry",
-    "merchant_a36990b3-1555-4bcb-8018-2040d376f82e":
-        "dev_CM3IfbLAvS8QETewsHlSqgpW9rzm30rsyX9Rglr6fNCKcoWDnOHNd4tSP919DtrB",
-    "merchant_c77a7ab7-c6ef-4189-b3dc-6bd4ad6d4113":
-        "dev_3jbCHPzuK0ecnLXSjQbZPO3TjpPMIs1R79ONWOuoaZCvxny337qc1y62G3ry4GLT",
-    "merchant_25941ceb-94b9-4348-8794-5885ef295cca":
-        "snd_TBWf5U19FqXbWDGRXUoExV8XVoBO7VIihz5KNeUkA6MtRvGZdUwbOi0Vhxv6RlZ2",
-    "merchant_1750056339": "snd_vL9nU4gGPe4lXQbbSlW3HIDcQUzcF9bHvV8dk4mwMO2dP7gcqMg9KZFgIswNS9ej",
-    "merchant_15034d84-c6e2-49a8-94f4-2285af1936f2":
-        "snd_qkhiSoxHT7gCuFxrYXbJl2wnuFR5XpwPxXamIQ9xnnmdV0rxYm3aeA3kAMdRHfXX",
-    "merchant_53efbb2f-3b52-40a8-830c-f02dbca1ac0e":
-        "dev_zCMn6i6CW51fznwjLuSZjCNmbrLm2XGtSuyhRLr2863gTmFPYHeaFeOQ8zLzfU62",
-    "merchant_d34fd21d-953e-446a-8c65-a48bcb0a12b8":
-        "dev_vxo5Kukmb2S1g8MHrARoT4OKoHduo4Q4HhWQs9XbYhfAB4VlwfHth6h0HFOYMcA8",
-    "merchant_e022b3df-d020-4eb6-a798-937827617b75":
-        "dev_PqMelDwV4wCiEMBbhTbSsm62Am17x8tYf0dS7Y8rGArOYC54CclU9YG2acXdIrd6",
-    "merchant_331ab738-45be-4e62-ab9b-146fbc3ecda5":
-        "dev_KycZWBwcTKZrpmTM2VsuM74YWzqFzwArL6lLGBgCtxu9OCIjwPHZpcuyVfNyjVlN",
-    "merchant_6b10ed12-5e18-44f8-a7ea-89f483e23329":
-        "snd_CQub4g5SD0MfW7aDFwsChsSKpCVKaTtlEvCr9WBunkxDbHNA6szVgUTRjPA42KqC",
-    "merchant_f1fdab77-4fec-4188-aa4e-6d273ae372b0":
-        "snd_tFe6mNuXEfWafPbdIwbNzpf89tOzkkBmS8DaCVshxwKKycsYbyjgXU3hMbAc785i",
-    "merchant_1ee30a9f-9476-493e-a36a-a28fc1c185c4":
-        "snd_c7hM3aenyya8fDN8PLdtzCZpiIGidqYxUced47LFQYfmyvaYQ4YaOhj52q8cP0Kn",
-    "merchant_0da75e21-049e-462d-8f09-01e78cfe670c":
-        "snd_iyWGk1ij3r4A4xQNBwnB8L3tguVOTs5AdMHOKr73F84ade5fBi863pLcki1OURHC",
-    "merchant_6ed42cb7-2edb-426a-b968-865a33394dda":
-        "snd_UpAyhr4ksBAEYuc4uptbAHRBhJmT22AsCxPrZWnGKl0ydEZj9ll24XM39iV7oDSc",
-    "merchant_defd2a4b-587e-4807-9f2c-62f7383b2424":
-        "snd_ODCt6TchezdiYWKVPVeSETZpOjE6Ko19qtuocG1tjLMNveDvBhRSsWg2ucaRagLa",
-    "merchant_622d2eed-f556-4f42-a76c-3edb985771a3":
-        "snd_OfGVX3PDM2U9q1HlsM7YbLdXqYK1wzyBNhqAl4V6LYGy8nM8o9or4fIoOXrDJLeU",
-    "merchant_3a0695d7-7392-42c0-a39c-3b9472c70bed":
-        "snd_cYf1sR6JQo37btx8wLP0GEGV54g8jni1wcW3HnMzj3bXs2MAwUaliiMZKhjNS92g",
-    "merchant_18fda02f-2e10-48f5-bea6-d0deceee9cd5":
-        "snd_IJSGHOHIuciVLRNCBZTMkBp6wjXCpv0VLu4YOsve0Tna7SNjlC6KimeeaBIXQAyf",
-    "merchant_0a9b0a0e-1d46-4762-9a5a-299eee3777bc":
-        "snd_JOdyV2vyuk5Hx8itpcB8or6OdTQLHnoSKp4GWdLMRpArQSaCg72UzQhpH9RvEbwK",
-    "merchant_0062e33e-62db-4342-a873-c3f3b1a9c0ca":
-        "snd_xbq45K4mwEclI8ht5YHSatiKJ7paFgvKT6VsvG3AlKqyw7qkNa97juUIX1IOxmjz",
-    "merchant_d8453874-2faa-4ed0-8f8d-9cae553e60c2":
-        "snd_48UiegaueusWlJVPvhbCgoDVrTCWrk3wa7LRZ4OdZup7rEKsn7sHSS2TW1BdWotN",
-    "merchant_e6842cb0-39bd-4ff5-b03b-0b414e336a77":
-        "snd_Ulgpdnl8U0HJSpR2KOsIgU4TadoRpd19sV9kp72fu8rD9GGAXX4dTG8Q10J7oU88",
-    "merchant_82b6e5cb-9205-4f9c-88e1-7f40d1e82087":
-        "snd_UCCApcRllvDjqp6vsbl3w12wpIfyKgPgHzPGTWkbzsefsvn1orTBnWyrDxPTA0Js",
-    "merchant_5f3a497c-baab-414e-8f96-ad98c3e1add1":
-        "snd_5Vl3SASXt9F5wh7EjpWREdwbkTY3LRYBKCeBA1msruDEZ0MKkrcsAMLJgXielbzy"
-}
-
-profile_response_hash_mapping = {
-    "pro_WOem7XduQBA8D6CqTqvT":
-        "HTuaP9q2l2MHaZfHXi1EjNqtH9Z52SHscrNELg2aRw7flElF29ChNeMSjgpw4hCb",
-    "pro_NDmWdTYdJMOmdH2nZvMh":
-        "HTuaP9q2l2MHaZfHXi1EjNqtH9Z52SHscrNELg2aRw7flElF29ChNeMSjgpw4hCb",
-    "pro_7jAtP8hpv20vctRZDc1T":
-        "HTuaP9q2l2MHaZfHXi1EjNqtH9Z52SHscrNELg2aRw7flElF29ChNeMSjgpw4hCb",
-    "pro_Wz1NCfSnkptsycR1WyDj":
-        "HTuaP9q2l2MHaZfHXi1EjNqtH9Z52SHscrNELg2aRw7flElF29ChNeMSjgpw4hCb",
-    "pro_Th1mwfYRaYQesmPONvZy":
-        "HTuaP9q2l2MHaZfHXi1EjNqtH9Z52SHscrNELg2aRw7flElF29ChNeMSjgpw4hCb",
-    "pro_Y58GwHnsyf9Uw09KTFbC":
-        "HTuaP9q2l2MHaZfHXi1EjNqtH9Z52SHscrNELg2aRw7flElF29ChNeMSjgpw4hCb"
-}
-
-connector_id_response_hash_key_mapping = {
-    "pro_Y58GwHnsyf9Uw09KTFbC": "mca_NyWXY56NjeJG6tyDd7Yp",
-    "pro_WOem7XduQBA8D6CqTqvT": "mca_Ms7jGE6DzZa4w6fULBg9",
-    "pro_NDmWdTYdJMOmdH2nZvMh": "mca_EXFgkObv3Ev7Wzk4fpc6",
-    "pro_7jAtP8hpv20vctRZDc1T": "mca_NLaMeRsID0HimfrTY1z9",
-    "pro_Wz1NCfSnkptsycR1WyDj": "mca_NEDTP5n3F1Ja0Ne6fdiT",
-    "pro_Th1mwfYRaYQesmPONvZy": "mca_4secqwnrCKyvThXA1jQV"
-}
+mapping = json.loads(open("mapping.json").read())
+profile_response_hash_mapping = json.loads(open("profile_response_hash_mapping.json").read())
+connector_id_response_hash_key_mapping = json.loads(open("connector_id_response_hash_key_mapping.json").read())
 security = HTTPBasic()
 admin_combined_headers = {**admin_api_key_headers, **content_type_headers}
-# merchant_combined_headers = {**merchant_api_key_headers, **content_type_headers}
-# API endpoints
+
 sandbox_endpoint = "http://localhost:8089"
 
 
@@ -200,6 +105,12 @@ def onboard_merchant(
     if response.status_code == 200:
         message = f"Merchant account {merchant_id} created successfully."
         print(message)
+        with open("profile_response_hash_mapping.json", "r+") as f:
+            data = json.load(f)
+            data[response.json().get("default_profile")] = response.json().get("payment_response_hash_key")
+            f.seek(0)
+            json.dump(data, f, indent=4)
+            f.truncate()
         return {"message": message, "response": response.json()}
     else:
         message = f"Failed to create merchant account: {response.text}"
@@ -242,6 +153,11 @@ def generate_api_keys(merchant_id: str):
     if response.status_code == 200:
         message = f"API keys for merchant {merchant_id} created successfully."
         print(message)
+        with open("mapping.json", "r+") as f:
+            data = json.load(f)
+            data[merchant_id] = response.json().get("api_key")
+            f.seek(0)
+            json.dump(data, f, indent=4)
         return {"message": message, "response": response.json()}
     else:
         message = f"Failed to create API keys: {response.text}"
@@ -347,13 +263,18 @@ def add_payment_connector(merchant_id: str, profile_id: str = None):
     }
     connector_payload = cybersource_connector_payload
     # todo: add merchant API key to the headers, how
-    merchant_api_key_headers = {"api-key": mapping.get(merchant_id, MERCHANT_API_KEY)}
+    merchant_api_key_headers = {"api-key": mapping.get(merchant_id)}
     merchant_combined_headers = {**merchant_api_key_headers, **content_type_headers}
     response = requests.post(add_connector_request, json=connector_payload, headers=merchant_combined_headers)
     print(f"RESPONSE: {response}")
     if response.status_code == 200:
         message = f"Payment connector added successfully for merchant {merchant_id}."
         print(message)
+        with open("connector_id_response_hash_key_mapping.json", "r+") as f:
+            data = json.load(f)
+            data[profile_id] = response.json().get("merchant_connector_id")
+            f.seek(0)
+            json.dump(data, f, indent=4)
         return {"message": message, "response": response.json()}
     else:
         message = f"Failed to add payment connector: {response.text}"
@@ -380,7 +301,7 @@ def delete_payment_connector(merchant_id: str, connector_id: str):
 @app.post("/create_payment_link", tags=["Payments"])
 def create_payment_link(merchant_id: str, amount: int, profile_id: str):
     create_payment_link_request = f"{sandbox_endpoint}/payments"
-    merchant_api_key_headers = {"api-key": mapping.get(merchant_id, MERCHANT_API_KEY)}
+    merchant_api_key_headers = {"api-key": mapping.get(merchant_id)}
     merchant_combined_headers = {**merchant_api_key_headers, **content_type_headers}
     platform_fee = int(0.01 * amount)  # Assuming 1% platform fee
     transaction_fee = int(0.02 * amount)  # Assuming 2% transaction fee
@@ -395,7 +316,8 @@ def create_payment_link(merchant_id: str, amount: int, profile_id: str):
             "platform_fee": platform_fee,
             "transaction_fee": transaction_fee
         },
-        "connector": ["cybersource", "bitpay","cashtocode", "stripe"],
+        "connector": ["cybersource"],
+        # "connector": ["cybersource", "bitpay","cashtocode", "stripe"],
         "currency": "USD",
         "payment_link": True,
         "return_url": "https:/hyperswitch.io",
@@ -472,7 +394,6 @@ def create_payment_link(merchant_id: str, amount: int, profile_id: str):
 
 @app.get("/list_payment_methods")
 def get_payment_methods():
-    # client_secret = "pay_Y4jNqPhQWP5g8K3CNVuA_secret_6M8MHubnQICAZvMzPTe4"
     client_secret = "pay_vtDvliDykbQadBUNmq2r_secret_jhiz8JWH7nf0RMswaM70"
     payment_methods_request = f"{sandbox_endpoint}/account/payment_methods"
     publishable_key = "pk_snd_b1f4a2e0517b4a71a1af9cc894f75ffb"
@@ -500,7 +421,7 @@ def get_payments(merchant_id: str, payment_id: str = None, profile_id: str = Non
     Get all payments for the merchant.
     """
     all_payments_request = f"{sandbox_endpoint}/payments/list"
-    merchant_api_key_headers = {"api-key": mapping.get(merchant_id, MERCHANT_API_KEY)}
+    merchant_api_key_headers = {"api-key": mapping.get(merchant_id)}
     merchant_combined_headers = {**merchant_api_key_headers, **content_type_headers}
     if payment_id:
         response = requests.get(f"{sandbox_endpoint}/payments/{payment_id}", params={"payment_id": payment_id},
@@ -525,7 +446,7 @@ def get_payments(merchant_id: str, payment_id: str = None, profile_id: str = Non
 @app.post("/create_refund", tags=["Refund"])
 def create_refund(merchant_id: str, payment_id: str):
     refund_request = f"{sandbox_endpoint}/refunds"
-    merchant_api_key_headers = {"api-key": mapping.get(merchant_id, MERCHANT_API_KEY)}
+    merchant_api_key_headers = {"api-key": mapping.get(merchant_id)}
     merchant_combined_headers = {**merchant_api_key_headers, **content_type_headers}
     refund_payload = {
         "payment_id": payment_id,
@@ -551,7 +472,7 @@ def get_all_refunds(merchant_id: str, payment_id: str = None):
     Get all refunds for the merchant.
     """
     all_refunds_request = f"{sandbox_endpoint}/refunds/list"
-    merchant_api_key_headers = {"api-key": mapping.get(merchant_id, MERCHANT_API_KEY)}
+    merchant_api_key_headers = {"api-key": mapping.get(merchant_id)}
     merchant_combined_headers = {**merchant_api_key_headers, **content_type_headers}
     if payment_id:
         response = requests.post(all_refunds_request, json={"payment_id": payment_id},
@@ -578,7 +499,7 @@ def create_business_profile(merchant_id: str, profile_name: str):
     profile_payload = {
         "profile_name": profile_name
     }
-    merchant_api_key_headers = {"api-key": mapping.get(merchant_id, MERCHANT_API_KEY)}
+    merchant_api_key_headers = {"api-key": mapping.get(merchant_id)}
     merchant_combined_headers = {**merchant_api_key_headers, **content_type_headers}
     response = requests.post(create_profile_request, json=profile_payload, headers=merchant_combined_headers)
     print(f"RESPONSE: {response}")
@@ -598,7 +519,7 @@ def list_business_profiles(merchant_id: str):
     List business profiles for the merchant.
     """
     list_profiles_request = f"{sandbox_endpoint}/account/{merchant_id}/business_profile"
-    merchant_api_key_headers = {"api-key": mapping.get(merchant_id, MERCHANT_API_KEY)}
+    merchant_api_key_headers = {"api-key": mapping.get(merchant_id)}
     merchant_combined_headers = {**merchant_api_key_headers, **content_type_headers}
     response = requests.get(list_profiles_request, headers=merchant_combined_headers)
     print(f"RESPONSE: {response}")
@@ -630,7 +551,7 @@ def update_business_profile(merchant_id: str, profile_id: str):
             "payment_failed_enabled": True,
         }
     }
-    merchant_api_key_headers = {"api-key": mapping.get(merchant_id, MERCHANT_API_KEY)}
+    merchant_api_key_headers = {"api-key": mapping.get(merchant_id)}
     merchant_combined_headers = {**merchant_api_key_headers, **content_type_headers}
     response = requests.post(update_profile_request, json=profile_payload, headers=merchant_combined_headers)
     print(f"RESPONSE: {response}")
@@ -757,7 +678,6 @@ def analytics():
         headers=headers,
         json=payload_data
     )
-    breakpoint()
 
 """
 if __name__ == "__main__":
